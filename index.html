@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundness V2 Membercard Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0A1A2F 0%, #1a2332 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            color: #00E5FF;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px #00E5FF, 0 0 40px #00E5FF;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 20px #00E5FF, 0 0 40px #00E5FF; }
+            50% { text-shadow: 0 0 30px #00E5FF, 0 0 60px #00E5FF, 0 0 80px #3CF2E2; }
+        }
+
+        .editor-panel {
+            background: rgba(10, 26, 47, 0.8);
+            border: 2px solid #00E5FF;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #3CF2E2;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 2px solid #00E5FF;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            background: rgba(0, 229, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00E5FF 0%, #3CF2E2 100%);
+            border: none;
+            border-radius: 8px;
+            color: #0A1A2F;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 229, 255, 0.4);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 229, 255, 0.6);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .card-preview {
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00E5FF;
+            border-radius: 50%;
+            animation: float 4s ease-in-out infinite;
+            box-shadow: 0 0 10px #00E5FF;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+
+        .membercard-wrapper {
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+
+        .membercard-wrapper:hover {
+            transform: rotateX(5deg) rotateY(-5deg);
+        }
+
+        .membercard {
+            width: 600px;
+            height: 350px;
+            background: linear-gradient(135deg, #0A1A2F 0%, #1a2e4a 100%);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 3px solid #00E5FF;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 229, 255, 0.8),
+                            0 0 40px rgba(0, 229, 255, 0.5),
+                            inset 0 0 20px rgba(0, 229, 255, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 229, 255, 1),
+                            0 0 60px rgba(60, 242, 226, 0.8),
+                            inset 0 0 30px rgba(0, 229, 255, 0.3);
+            }
+        }
+
+        .holographic-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 229, 255, 0.03) 2px, rgba(0, 229, 255, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 229, 255, 0.03) 2px, rgba(0, 229, 255, 0.03) 4px);
+            pointer-events: none;
+        }
+
+        .card-header {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0, 229, 255, 0.3);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #00E5FF;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .dolphin-emblem {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 10px #00E5FF);
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .username {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+        }
+
+        .card-details {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            flex: 1;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: #3CF2E2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 1.3rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .card-footer {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 2;
+        }
+
+        .verified-badge {
+            background: linear-gradient(135deg, #00E5FF 0%, #3CF2E2 100%);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #0A1A2F;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .glow-orb {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0, 229, 255, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .glow-orb-1 {
+            top: -50px;
+            right: -50px;
+            animation: orbPulse 4s ease-in-out infinite;
+        }
+
+        .glow-orb-2 {
+            bottom: -50px;
+            left: -50px;
+            animation: orbPulse 4s ease-in-out infinite 2s;
+        }
+
+        @keyframes orbPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        @media (max-width: 768px) {
+            .membercard {
+                width: 100%;
+                max-width: 450px;
+                height: 280px;
+                padding: 20px;
+            }
+
+            .username {
+                font-size: 1.8rem;
+            }
+
+            .card-details {
+                gap: 20px;
+            }
+
+            .detail-value {
+                font-size: 1.1rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particle-container" id="particleContainer"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Soundness V2 Membercard Generator</h1>
+        </div>
+
+        <div class="editor-panel">
+            <div class="input-group">
+                <label for="usernameInput">Username</label>
+                <input type="text" id="usernameInput" placeholder="Enter your username" value="SOUNDY">
+            </div>
+
+            <div class="input-group">
+                <label for="roleSelect">Role</label>
+                <select id="roleSelect">
+                    <option value="Highlight">Highlight</option>
+                    <option value="Contributor">Contributor</option>
+                    <option value="Soundies">Soundies</option>
+                    <option value="Member" selected>Member</option>
+                    <option value="Pioneer">Pioneer</option>
+                    <option value="Legend">Legend</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="proofInput">Proof Count</label>
+                <input type="number" id="proofInput" placeholder="0" value="42" min="0">
+            </div>
+
+            <button class="download-btn" onclick="downloadCard()">Download Membercard</button>
+        </div>
+
+        <div class="card-preview">
+            <div class="membercard-wrapper">
+                <div class="membercard" id="membercard">
+                    <div class="holographic-grid"></div>
+                    <div class="glow-orb glow-orb-1"></div>
+                    <div class="glow-orb glow-orb-2"></div>
+
+                    <div class="card-header">
+                        <div class="card-title">Soundness V2 — Membercard</div>
+                        <div class="dolphin-emblem">
+    				<img src="soundness.jpg" alt="Soundness Logo" style="height: 40px;">
+                    </div>
+
+                    <div class="card-content">
+                        <div class="username" id="cardUsername">SOUNDY</div>
+
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Role</div>
+                                <div class="detail-value" id="cardRole">Member</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Proof Count</div>
+                                <div class="detail-value" id="cardProof">42</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="verified-badge">✓ Verified</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Live update functionality
+        const usernameInput = document.getElementById('usernameInput');
+        const roleSelect = document.getElementById('roleSelect');
+        const proofInput = document.getElementById('proofInput');
+
+        const cardUsername = document.getElementById('cardUsername');
+        const cardRole = document.getElementById('cardRole');
+        const cardProof = document.getElementById('cardProof');
+
+        usernameInput.addEventListener('input', (e) => {
+            cardUsername.textContent = e.target.value.toUpperCase() || 'USERNAME';
+        });
+
+        roleSelect.addEventListener('change', (e) => {
+            cardRole.textContent = e.target.value;
+        });
+
+        proofInput.addEventListener('input', (e) => {
+            cardProof.textContent = e.target.value || '0';
+        });
+
+        // Floating particles
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 4 + 's';
+            particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            document.getElementById('particleContainer').appendChild(particle);
+
+            setTimeout(() => {
+                particle.remove();
+            }, 7000);
+        }
+
+        setInterval(createParticle, 500);
+
+        // Download card as PNG
+        async function downloadCard() {
+            const card = document.getElementById('membercard');
+            const downloadBtn = document.querySelector('.download-btn');
+            
+            downloadBtn.textContent = 'Generating...';
+            downloadBtn.disabled = true;
+
+            try {
+                const canvas = await html2canvas(card, {
+                    scale: 3,
+                    backgroundColor: null,
+                    logging: false,
+                    useCORS: true
+                });
+
+                const link = document.createElement('a');
+                const username = usernameInput.value || 'soundy';
+                link.download = `soundness-membercard-${username.toLowerCase()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                downloadBtn.textContent = 'Download Membercard';
+                downloadBtn.disabled = false;
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert('Download failed. Please try again.');
+                downloadBtn.textContent = 'Download Membercard';
+                downloadBtn.disabled = false;
+            }
+        }
+
+        // 3D tilt effect enhancement
+        const cardWrapper = document.querySelector('.membercard-wrapper');
+        const card = document.querySelector('.membercard');
+
+        cardWrapper.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 20;
+            const rotateY = (centerX - x) / 20;
+            
+            cardWrapper.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
+
+        cardWrapper.addEventListener('mouseleave', () => {
+            cardWrapper.style.transform = 'rotateX(0) rotateY(0) scale(1)';
+        });
+
+        // Initialize with some particles
+        for (let i = 0; i < 10; i++) {
+            setTimeout(createParticle, i * 200);
+        }
+    </script>
+</body>
+</html>
