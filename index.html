@@ -103,6 +103,26 @@
             color: rgba(255, 255, 255, 0.5);
         }
 
+        .input-group input[type="file"] {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+
+        .input-group input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, #00E5FF 0%, #3CF2E2 100%);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: #0A1A2F;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .input-group input[type="file"]::file-selector-button:hover {
+            opacity: 0.9;
+        }
+
         .download-btn {
             width: 100%;
             padding: 15px;
@@ -375,6 +395,11 @@
                 <input type="number" id="proofInput" placeholder="0" value="42" min="0">
             </div>
 
+            <div class="input-group">
+                <label for="logoInput">Custom Logo (Optional)</label>
+                <input type="file" id="logoInput" accept="image/*">
+            </div>
+
             <button class="download-btn" onclick="downloadCard()">Download Membercard</button>
         </div>
 
@@ -388,7 +413,7 @@
                     <div class="card-header">
                         <div class="card-title">Soundness V2 — Membercard</div>
                         <div class="dolphin-emblem">
-                            <img src="assets/soundness.png" alt="Soundness Logo" style="height: 40px;">
+                            <img id="cardLogo" src="assets/soundness.png" alt="Soundness Logo" style="height: 40px; object-fit: contain;">
                         </div>
                     </div>
 
@@ -420,10 +445,12 @@
         const usernameInput = document.getElementById('usernameInput');
         const roleSelect = document.getElementById('roleSelect');
         const proofInput = document.getElementById('proofInput');
+        const logoInput = document.getElementById('logoInput');
 
         const cardUsername = document.getElementById('cardUsername');
         const cardRole = document.getElementById('cardRole');
         const cardProof = document.getElementById('cardProof');
+        const cardLogo = document.getElementById('cardLogo');
 
         usernameInput.addEventListener('input', (e) => {
             cardUsername.textContent = e.target.value.toUpperCase() || 'USERNAME';
@@ -435,6 +462,17 @@
 
         proofInput.addEventListener('input', (e) => {
             cardProof.textContent = e.target.value || '0';
+        });
+
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    cardLogo.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         });
 
         // Floating particles
